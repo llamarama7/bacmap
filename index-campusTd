@@ -1,0 +1,133 @@
+<html>
+<head>
+  <title>Map of BAC Referrals</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="css/styles.css">
+	<link href='http://api.tiles.mapbox.com/mapbox.js/v1.0.2/mapbox.css' rel='stylesheet' />
+	<!--[if lte IE 8]>
+	<link href='http://api.tiles.mapbox.com/mapbox.js/v1.0.2/mapbox.ie.css' rel='stylesheet' />
+	<![endif]-->
+
+	<script src='http://api.tiles.mapbox.com/mapbox.js/v1.0.2/mapbox.js'></script>
+	<script type="text/javascript" src="vendor/tabletop.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+</head>
+
+<body>
+
+	<!-- Slider for toggling through years -->
+	<!-- <p class="year">Which years</p> -->
+
+	<!--Intro text about map 
+	<p class="intro">Which parts of town send most kids to disciplinary school...</p>
+	<br> 
+  -->
+
+
+
+	<div id="map"></div>
+
+	<div >
+		<table class="schools" id="schooltable">
+			<tr>
+				<th>School</th>
+				<th>Total Referrals</th>
+        <th>Referrals per hundred students</th>
+				<th>Poverty level</th>
+			</tr>
+		</table>
+	</div>
+
+
+
+	<script type='text/javascript'>
+    var map = L.mapbox
+      .map('map', 'patmich.map-ei4nie9s')
+      .setView([25.93512, -97.49034], 12);
+
+    var icons = {
+    	middle: "images/green.png",
+    	high: "images/blue.png"
+    }
+
+    function scale(number) {
+    	return (Math.floor(number / 10.0) + 1) * 2;
+    }
+
+    // Rounds decimals to whatever you want
+    function precise_round(num,decimals){
+      return Math.round(num*Math.pow(10,decimals))/Math.pow(10,decimals);
+}
+
+    Tabletop.init({
+      key: '0AkmnxC7ZoqXHdGtNdVhIbG9NZ0Z0X0lsdTZZV3VXQ3c',
+      simpleSheet: true,
+      callback: function(data) {
+        console.log(data)
+
+  for (var i = 0; i < data.length; i++) {
+    			var school = data[i];
+
+
+    	    // Returns data to the console to see what's loading
+   		    // console.log(school);
+
+    			var marker = L.marker([school.lat, school.lon], {
+    				icon: L.icon({
+        			iconUrl: icons[school.level],
+        			iconSize:     [scale(school.refersdot), scale(school.refersdot)], // size of the icon
+	        		iconAnchor:   [25, 25], // point of the icon which will correspond to marker's location
+	        		popupAnchor:  [0, -25]  // point from which the popup should open relative to the iconAnchor
+	    			})
+
+					}).addTo(map);
+
+
+    // Round decimals before putting them in the popup
+          var referdisplay = precise_round(school.refers,2);
+
+    // Create custom popup content
+          var popupContent =  
+            ('<h1 class="popup">' + school.campus + ' School</h1>' +
+            '<p class="popup">' + school.total + ' referrals from fall 2008 to May 2013<br>' + referdisplay + ' annual referrals per 100 students<br>' +
+             + school.poverty + '% poverty in student body</p>');
+
+          marker.bindPopup(popupContent,{
+            closeButton: true,
+            minWidth: 200
+          });
+
+
+
+    // Create a table next to the map
+    		var table = $("table.schools");
+    		var row = $("<tr></tr>").appendTo(table);
+        var campusTd = $("<td class='campus'></td>");
+        campusTd.text(school.campus).appendTo(row);
+        $("<td></td>").text(school.total).appendTo(row);
+        $("<td></td>").text(precise_round(school.refers,1)).appendTo(row);
+        $("<td></td>").text(school.poverty + '%').appendTo(row);
+
+// IN PROGRESS: Will popup bubble for campus when clicked in table at right
+        campusTd.hover(function(){ 
+          console.log(school.campus);
+          marker.openPopup(campusTd);
+        }
+        );
+  }       
+ //       schoolClick.onclick = function(schoolId){
+//
+ //         var markers = markerLayer.markers();
+ //         for (var i = 0; i < markers.length; i++) {
+            // if the title of one of the csv elements matches our id (obj) show that item
+//          if (markers[i].data.school && markers[i].data.school.campus === locationName) {
+//            markers[i].openPopup();
+//              }
+//            }
+//        } 
+    }});
+
+  </script>
+</head>
+
+</html>
